@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <link rel="icon" type="image/x-icon" href="Logo.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* YOUR EXACT ORIGINAL CSS - UNTOUCHED */
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #f0f4f7, #e2e8f0); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
+        .main-container { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; }
+        .input-form { background: rgba(255, 255, 255, 0.7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); flex: 1 1 300px; margin-right: 20px; box-sizing: border-box; }
+        .input-form h2 { margin-top: 0; color: #333; }
+        .input-form label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .input-form input { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid rgba(204, 204, 204, 0.5); border-radius: 8px; background: rgba(255, 255, 255, 0.6); color: #333; }
+        .item-input { display: flex; flex-direction: column; gap: 10px; border: 1px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 8px; }
+        .item-input-group { display: flex; justify-content: space-between; gap: 10px; }
+        .item-input-group input { width: 100%; margin-bottom: 0; }
+        .remove-item { cursor: pointer; color: #d9534f; font-weight: bold; font-size: 1.2em; text-align: right; transition: color 0.3s ease; }
+        .remove-item:hover { color: #c9302c; }
+        .total-display { margin-top: 20px; font-size: 1.2em; font-weight: bold; text-align: center; color: #333; }
+        .input-form button.large-btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #a32b2b, #d9534f); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        .input-form button.large-btn:hover { background: linear-gradient(45deg, #8c2525, #c9302c); transform: translateY(-2px); }
+        
+        /* Added a green variant for the WhatsApp button using your CSS structure */
+        .input-form button.wa-btn { background: linear-gradient(45deg, #25D366, #128C7E); }
+        .input-form button.wa-btn:hover { background: linear-gradient(45deg, #128C7E, #075E54); transform: translateY(-2px); }
+
+        .action-buttons { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
+        .action-buttons button { width: 40px; height: 40px; border-radius: 50%; padding: 0; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer; transition: all 0.3s ease; }
+        #addItemBtn { font-size: 2em; background: linear-gradient(45deg, #5cb85c, #4cae4c); color: white; }
+        #addItemBtn.rotate-icon { transform: rotate(45deg); } #addItemBtn:hover { background: linear-gradient(45deg, #4cae4c, #449d44); transform: scale(1.1); }
+        .print-btn { background: linear-gradient(45deg, #5bc0de, #31b0d5); color: white; }
+        .print-btn:hover { background: linear-gradient(45deg, #31b0d5, #2a96b2); transform: translateY(-2px); }
+        #editBtn { background: linear-gradient(45deg, #f0ad4e, #ec971f); color: white; }
+        #editBtn:hover { background: linear-gradient(45deg, #ec971f, #d58512); transform: translateY(-2px); } 
+        .invoice-container { width: 210mm; min-height: 297mm; background: rgba(255, 255, 255, 0.8); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 20mm; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); position: relative; box-sizing: border-box; flex: 2 1 500px; border-radius: 12px; }
+        .invoice-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; } .invoice-header .logo-container { width: 100px; }
+        .logo { width: 100%; height: auto; display: block; margin-left: auto; }
+        .invoice-details { margin-bottom: 20px; } .invoice-details p { margin: 0; }
+        hr { border: none; border-top: 2px solid #333; margin: 10px 0; }
+        .issued-info { display: flex; justify-content: space-between; align-items: flex-start; }
+        .issued-info .issued-to-details { flex-grow: 1; } .issued-info .date-info { text-align: right; }
+        .invoice-table { margin-top: 20px; margin-bottom: 50px; }
+        .invoice-table table { width: 100%; border-collapse: collapse; }
+        .invoice-table th, .invoice-table td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+        .invoice-table th { background-color: #f2f2f2; }
+        .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; opacity: 0.1; z-index: 0; }
+        .watermark img { width: 100%; height: auto; display: block; margin: auto; }
+        .payment-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
+        .payment-summary { flex-basis: 35%; text-align: right; border-left: 1px solid #ddd; padding-left: 20px; }
+        .subtotal, .total { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .total p { font-size: 1.2em; }
+        .bank-details { flex-basis: 60%; }
+        .footer { text-align: center; margin-top: 50px; font-size: 0.9em; }
+        .qr-code-section { margin-top: 20px; } .qr-code { width: 150px; height: auto; }
+        @media print { body { background-color: #fff; } .input-form, .action-buttons { display: none; } .main-container { display: block; } .invoice-container { box-shadow: none; border: none; margin: 0; width: 100%; min-height: auto; padding: 10mm; } .qr-code-section { display: none !important; } }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="input-form">
+            <h2>Enter Details</h2>
+            <label for="invoiceNumber">Invoice Number: </label>
+            <input type="text" id="invoiceNumber" placeholder="00001">
+
+            <label for="issuedDate">Issued Date: </label>
+            <input type="date" id="issuedDate" placeholder="--/--/----">
+
+            <label for="issuedTo">Issued To: </label>
+            <input type="text" id="issuedTo" value="Mr./ Mrs. ">
+
+            <label for="customerPhone">WhatsApp No: </label>
+            <input type="text" id="customerPhone" placeholder="919876543210">
+
+            <label for="customerEmail">Email (Optional): </label>
+            <input type="email" id="customerEmail" placeholder="customer@email.com">
+
+            <div id="default-item-container">
+                <label for="defaultRoomPrice">Price (per day):</label>
+                <input type="number" id="defaultRoomPrice" placeholder="₹ 💰💰💰 /-">
+                
+                <label for="defaultQuantity">Days :</label>
+                <input type="number" id="defaultQuantity" placeholder="1">
+            </div>
+
+            <div id="items-container" style="display: none;"></div>
+            
+            <div class="action-buttons">
+                <div id="icon-group" class="icon-group" style="display: none;">
+                    <button id="editBtn" onclick="toggleItemInput('default')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+                <button id="addItemBtn" onclick="toggleItemInput('toggle')">+</button>
+                <button class="print-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i>
+                </button>
+            </div>
+
+            <div class="total-display">
+                <p>Calculated Total: ₹ <span id="calculatedTotal" placeholder="₹ 0,000/-"></span></p>
+            </div>
+            
+            <button class="large-btn" onclick="generateInvoice()"> Preview Bill 👁️</button>
+            <button class="large-btn wa-btn" id="sendBtn" onclick="saveAndSend()"> Save & Send WhatsApp 💬</button>
+            <p id="statusMsg" style="text-align: center; color: green; font-weight: bold; margin-top: 10px; display: none;"></p>
+        </div>
+
+        <div class="invoice-container" id="invoice-bill">
+            <div class="invoice-header">
+                <p><strong>INVOICE NO: </strong><span id="displayInvoiceNo"></span></p>
+                <div class="logo-container">
+                    <img src="Logo.png" alt="Shree Vilas Palace" class="logo">
+                </div>
+            </div>
+
+            <hr>
+            <div class="issued-info">
+                <div class="issued-to-details">
+                    <p><strong>ISSUED TO: </strong></p><br>
+                    <p id="displayIssuedTo"></p>
+                </div>
+                <div class="date-info">
+                    <p><strong>DATE: </strong></p>
+                    <p id="displayIssuedDate"> --/--/---- </p>
+                </div>
+            </div>
+
+            <div class="invoice-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>DESCRIPTION</th>
+                            <th>DAYS</th>
+                            <th>PRICE</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-items"></tbody>
+                </table>
+            </div>
+            
+            <div class="watermark">
+                <img src="Logo.png" alt="Shree Vilas Palace">
+            </div>
+            <br><br><br><br><br><br><br><br>
+
+            <div class="payment-section">
+                <div class="bank-details">
+                    <p><strong>PAYED TO:</strong></p>
+                    <p>State Bank of India</p>
+                    <p><strong>ACCOUNT NO. :</strong> xxxxxxxx2182</p>
+                    <p><strong>NAME :</strong> Nishant Jaiswal</p>
+                </div>
+                <div class="payment-summary">
+                    <div class="subtotal">
+                        <p><strong>Subtotal</strong></p>
+                        <p>₹ <span id="displaySubtotal"></span></p>
+                    </div>
+                    <div class="total">
+                        <p><strong>Total</strong></p>
+                        <p><strong>₹ <span id="displayFinalTotal"></span>/-</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p><strong><i>A. 12/02 RAJGHAT, VARANASI</strong></p>
+                <p>Wishing you a joyfull Experience 😊</i></p>
+                <br><br><br>
+                <div class="qr-code-section">
+                    <img src="QR.jpeg" alt="Payment Code" class="qr-code">
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+        // YOUR EXACT JAVASCRIPT LOGIC - UNTOUCHED
+        let itemCounter = 0; let isDefaultMode = true;
+        function toggleItemInput(type) {
+            const defaultContainer = document.getElementById('default-item-container'); const itemsContainer = document.getElementById('items-container'); const iconGroup = document.getElementById('icon-group'); const addItemBtn = document.getElementById('addItemBtn');
+            if (type === 'toggle') {
+                if (isDefaultMode) { isDefaultMode = false; defaultContainer.style.display = 'none'; itemsContainer.style.display = 'block'; iconGroup.style.display = 'flex'; addItemBtn.classList.add('rotate-icon'); }
+                addItem();
+            } else if (type === 'default') {
+                isDefaultMode = true; defaultContainer.style.display = 'block'; itemsContainer.style.display = 'none'; itemsContainer.innerHTML = ''; iconGroup.style.display = 'none'; addItemBtn.classList.remove('rotate-icon'); itemCounter = 0;
+            }
+            updateCalculatedTotal();
+        }
+        function addItem() {
+            itemCounter++; const itemsContainer = document.getElementById('items-container'); const newItemDiv = document.createElement('div'); newItemDiv.className = 'item-input'; newItemDiv.dataset.itemId = itemCounter;
+            newItemDiv.innerHTML = `
+                <span class="remove-item" onclick="removeItem(this)">x</span>
+                <label>Item #${itemCounter}</label>
+                <input type="text" class="item-description" placeholder="Item Description">
+                <div class="item-input-group">
+                    <input type="number" class="item-price" placeholder="Price">
+                    <input type="number" class="item-quantity" placeholder="Qty">
+                </div>`;
+            itemsContainer.appendChild(newItemDiv);
+            document.querySelectorAll('.item-price, .item-quantity').forEach(input => { input.addEventListener('input', updateCalculatedTotal); });
+        }
+        function removeItem(element) { element.closest('.item-input').remove(); updateCalculatedTotal(); }
+        function updateCalculatedTotal() {
+            let total = 0;
+            if (isDefaultMode) {
+                const price = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; const quantity = parseInt(document.getElementById('defaultQuantity').value) || 0; total = price * quantity;
+            } else {
+                const items = document.querySelectorAll('.item-input');
+                items.forEach(item => { const price = parseFloat(item.querySelector('.item-price').value) || 0; const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; total += price * quantity; });
+            }
+            document.getElementById('calculatedTotal').textContent = total.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            return total; // Added return for the backend
+        }
+        function generateInvoice() {
+            const invoiceNumber = document.getElementById('invoiceNumber').value || ''; const issuedDateInput = document.getElementById('issuedDate').value; const issuedTo = document.getElementById('issuedTo').value || '';
+            const invoiceItemsTable = document.getElementById('invoice-items'); invoiceItemsTable.innerHTML = ''; let finalTotal = 0;
+            if (isDefaultMode) {
+                const description = "Spacious Room (2X Beds)"; const price = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; const quantity = parseInt(document.getElementById('defaultQuantity').value) || 0; finalTotal = price * quantity;
+                const newRow = document.createElement('tr'); newRow.innerHTML = `<td>${description}</td><td>${quantity}</td><td>₹ ${price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td><td>₹ ${finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td>`; invoiceItemsTable.appendChild(newRow);
+            } else {
+                const items = document.querySelectorAll('.item-input');
+                items.forEach(item => {
+                    const description = item.querySelector('.item-description').value || 'Service/Item'; const price = parseFloat(item.querySelector('.item-price').value) || 0; const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; const itemTotal = price * quantity; finalTotal += itemTotal;
+                    const newRow = document.createElement('tr'); newRow.innerHTML = `<td>${description}</td><td>${quantity}</td><td>₹ ${price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td><td>₹ ${itemTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td>`; invoiceItemsTable.appendChild(newRow);
+                });
+            }
+            document.getElementById('displayInvoiceNo').textContent = invoiceNumber; document.getElementById('displayIssuedTo').textContent = issuedTo;
+            if (issuedDateInput) { const date = new Date(issuedDateInput); const options = { year: 'numeric', month: 'long', day: 'numeric' }; document.getElementById('displayIssuedDate').textContent = date.toLocaleDateString('en-US', options); } else { document.getElementById('displayIssuedDate').textContent = '--/--/----'; }
+            document.getElementById('displaySubtotal').textContent = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0}); document.getElementById('displayFinalTotal').textContent = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        }
+        window.onload = function() { toggleItemInput('default'); document.getElementById('defaultQuantity').value = 1; document.getElementById('defaultRoomPrice').addEventListener('input', updateCalculatedTotal); document.getElementById('defaultQuantity').addEventListener('input', updateCalculatedTotal); }
+
+        // --- CORRECTED GITHUB AUTOMATION LOGIC ---
+        function saveAndSend() {
+            const invoiceNo = document.getElementById('invoiceNumber').value;
+            const issuedTo = document.getElementById('issuedTo').value;
+            const phone = document.getElementById('customerPhone').value;
+            const email = document.getElementById('customerEmail').value;
+            const total = updateCalculatedTotal();
+            const statusMsg = document.getElementById('statusMsg');
+
+            if(!phone) { alert("Please enter a WhatsApp Number!"); return; }
+
+            // Ensure preview is updated first
+            generateInvoice();
+
+            statusMsg.style.display = "block";
+            statusMsg.textContent = "Saving to Google Sheets...";
+
+            const billData = { invoiceNo, issuedTo, phone, email, total };
+
+            // ! REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL !
+            const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8o9tq7Ha8eA3vdR7tz9vbx_Rg68mQsEghXUXO6gCpv3S8r9UZUdM-c5kQqLzcusji/exec"; 
+
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(billData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    statusMsg.style.color = "green";
+                    statusMsg.textContent = "✅ Saved! Opening WhatsApp...";
+                    
+                    // Open WhatsApp automatically
+                    const message = `Hello ${issuedTo},%0A%0AThank you for staying at Shree Vilas Palace!%0AYour invoice #${invoiceNo} total is Rs. ${total}/-.%0A%0ARegards,%0AShree Vilas Palace`;
+                    const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+                    setTimeout(() => { window.open(whatsappUrl, '_blank'); }, 1000);
+                } else {
+                    statusMsg.style.color = "red";
+                    statusMsg.textContent = "❌ Error saving to sheet.";
+                }
+            })
+            .catch(error => {
+                statusMsg.style.color = "red";
+                statusMsg.textContent = "❌ Connection failed. Check App Script URL.";
+            });
+        }
+    </script>
+</body>
+</html>
