@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice Generator</title>
-    <link rel="icon" type="image/x-icon" href="Logo.png">
+    
+    <link rel="icon" type="image/png" href="https://nishu-coder.github.io/vilas-palace/Logo.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         /* YOUR EXACT ORIGINAL CSS - UNTOUCHED */
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #f0f4f7, #e2e8f0); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
@@ -23,7 +28,6 @@
         .input-form button.large-btn { width: 100%; padding: 12px; background: linear-gradient(45deg, #a32b2b, #d9534f); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 10px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
         .input-form button.large-btn:hover { background: linear-gradient(45deg, #8c2525, #c9302c); transform: translateY(-2px); }
         
-        /* Added a green variant for the WhatsApp button using your CSS structure */
         .input-form button.wa-btn { background: linear-gradient(45deg, #25D366, #128C7E); }
         .input-form button.wa-btn:hover { background: linear-gradient(45deg, #128C7E, #075E54); transform: translateY(-2px); }
 
@@ -105,7 +109,7 @@
             
             <button class="large-btn" onclick="generateInvoice()"> Preview Bill 👁️</button>
             <button class="large-btn wa-btn" id="sendBtn" onclick="saveAndSend()"> Save & Send WhatsApp 💬</button>
-            <p id="statusMsg" style="text-align: center; color: green; font-weight: bold; margin-top: 10px; display: none;"></p>
+            <p id="statusMsg" style="text-align: center; font-weight: bold; margin-top: 10px; display: none;"></p>
         </div>
 
         <div class="invoice-container" id="invoice-bill">
@@ -171,13 +175,13 @@
                 <p>Wishing you a joyfull Experience 😊</i></p>
                 <br><br><br>
                 <div class="qr-code-section">
-                    <img src="https://nishu-coder.github.io/vilas-palace/QR.jpeg" alt="Payment Code" class="qr-code">
+                    <img src="QR.jpeg" alt="Payment Code" class="qr-code">
                 </div>
             </div>
         </div>
     </div>
 
-<script>
+    <script>
         // YOUR EXACT JAVASCRIPT LOGIC - UNTOUCHED
         let itemCounter = 0; let isDefaultMode = true;
         function toggleItemInput(type) {
@@ -204,6 +208,7 @@
             document.querySelectorAll('.item-price, .item-quantity').forEach(input => { input.addEventListener('input', updateCalculatedTotal); });
         }
         function removeItem(element) { element.closest('.item-input').remove(); updateCalculatedTotal(); }
+        
         function updateCalculatedTotal() {
             let total = 0;
             if (isDefaultMode) {
@@ -213,8 +218,9 @@
                 items.forEach(item => { const price = parseFloat(item.querySelector('.item-price').value) || 0; const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; total += price * quantity; });
             }
             document.getElementById('calculatedTotal').textContent = total.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            return total; // Added return for the backend
+            return total; 
         }
+        
         function generateInvoice() {
             const invoiceNumber = document.getElementById('invoiceNumber').value || ''; const issuedDateInput = document.getElementById('issuedDate').value; const issuedTo = document.getElementById('issuedTo').value || '';
             const invoiceItemsTable = document.getElementById('invoice-items'); invoiceItemsTable.innerHTML = ''; let finalTotal = 0;
@@ -232,9 +238,10 @@
             if (issuedDateInput) { const date = new Date(issuedDateInput); const options = { year: 'numeric', month: 'long', day: 'numeric' }; document.getElementById('displayIssuedDate').textContent = date.toLocaleDateString('en-US', options); } else { document.getElementById('displayIssuedDate').textContent = '--/--/----'; }
             document.getElementById('displaySubtotal').textContent = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0}); document.getElementById('displayFinalTotal').textContent = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
         }
+        
         window.onload = function() { toggleItemInput('default'); document.getElementById('defaultQuantity').value = 1; document.getElementById('defaultRoomPrice').addEventListener('input', updateCalculatedTotal); document.getElementById('defaultQuantity').addEventListener('input', updateCalculatedTotal); }
 
-        // --- CORRECTED GITHUB AUTOMATION LOGIC ---
+        // --- FULLY UPDATED AUTOMATION LOGIC ---
         function saveAndSend() {
             const invoiceNo = document.getElementById('invoiceNumber').value;
             const issuedTo = document.getElementById('issuedTo').value;
@@ -243,41 +250,63 @@
             const total = updateCalculatedTotal();
             const statusMsg = document.getElementById('statusMsg');
 
+            // Collect Days and Price for Google Sheets
+            let days = "Multiple";
+            let price = "Multiple";
+            if (isDefaultMode) {
+                days = document.getElementById('defaultQuantity').value || 1;
+                price = document.getElementById('defaultRoomPrice').value || 0;
+            }
+
             if(!phone) { alert("Please enter a WhatsApp Number!"); return; }
 
             // Ensure preview is updated first
             generateInvoice();
 
             statusMsg.style.display = "block";
-            statusMsg.textContent = "Saving to Google Sheets...";
+            statusMsg.style.color = "#333";
+            statusMsg.textContent = "📸 Capturing bill & saving to Sheets...";
 
-            const billData = { invoiceNo, issuedTo, phone, email, total };
+            // 1. Capture the Invoice as an Image using html2canvas
+            const invoiceElement = document.getElementById('invoice-bill');
+            
+            html2canvas(invoiceElement, { scale: 2 }).then(canvas => {
+                // Download the image automatically
+                const link = document.createElement('a');
+                link.download = `Invoice_${invoiceNo}_${issuedTo}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
 
-            // ! REPLACE THIS URL WITH YOUR GOOGLE APPS SCRIPT WEB APP URL !
-            const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8o9tq7Ha8eA3vdR7tz9vbx_Rg68mQsEghXUXO6gCpv3S8r9UZUdM-c5kQqLzcusji/exec"; 
+                // 2. Prepare data for Google Sheets
+                const billData = { invoiceNo, issuedTo, phone, email, days, price, total };
+                
+                // APP SCRIPT URL (Matches your provided link)
+                const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8o9tq7Ha8eA3vdR7tz9vbx_Rg68mQsEghXUXO6gCpv3S8r9UZUdM-c5kQqLzcusji/exec"; 
 
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify(billData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if(data.success) {
-                    statusMsg.style.color = "green";
-                    statusMsg.textContent = "✅ Saved! Opening WhatsApp...";
-                    
-                    // Open WhatsApp automatically
-                    const message = `Hello ${issuedTo},%0A%0AThank you for staying at Shree Vilas Palace!%0AYour invoice #${invoiceNo} total is Rs. ${total}/-.%0A%0ARegards,%0AShree Vilas Palace`;
-                    const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
-                    setTimeout(() => { window.open(whatsappUrl, '_blank'); }, 1000);
-                } else {
+                // 3. Send to Sheets & Open WhatsApp
+                fetch(WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify(billData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        statusMsg.style.color = "green";
+                        statusMsg.textContent = "✅ Saved! Opening WhatsApp (Please attach the downloaded image)...";
+                        
+                        // Open WhatsApp automatically with text
+                        const message = `Hello ${issuedTo},%0A%0AThank you for staying at Shree Vilas Palace!%0AYour invoice #${invoiceNo} total is Rs. ${total}/-.%0A%0ARegards,%0AShree Vilas Palace`;
+                        const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+                        setTimeout(() => { window.open(whatsappUrl, '_blank'); }, 1500);
+                    } else {
+                        statusMsg.style.color = "red";
+                        statusMsg.textContent = "❌ Error saving to sheet.";
+                    }
+                })
+                .catch(error => {
                     statusMsg.style.color = "red";
-                    statusMsg.textContent = "❌ Error saving to sheet.";
-                }
-            })
-            .catch(error => {
-                statusMsg.style.color = "red";
-                statusMsg.textContent = "❌ Connection failed. Check App Script URL.";
+                    statusMsg.textContent = "❌ Connection failed. Check App Script URL.";
+                });
             });
         }
     </script>
