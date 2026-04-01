@@ -6,13 +6,10 @@
     <title>Invoice Generator</title>
     
     <link rel="icon" type="image/png" href="https://nishu-coder.github.io/vilas-palace/Logo.png">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        /* YOUR EXACT ORIGINAL CSS - UNTOUCHED */
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #f0f4f7, #e2e8f0); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
         .main-container { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; }
         .input-form { background: rgba(255, 255, 255, 0.7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); flex: 1 1 300px; margin-right: 20px; box-sizing: border-box; }
@@ -53,10 +50,11 @@
         .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; opacity: 0.1; z-index: 0; }
         .watermark img { width: 100%; height: auto; display: block; margin: auto; }
         .payment-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
-        .payment-summary { flex-basis: 35%; text-align: right; border-left: 1px solid #ddd; padding-left: 20px; }
+        .payment-summary { flex-basis: 40%; text-align: right; border-left: 1px solid #ddd; padding-left: 20px; }
         .subtotal, .total { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .total p { font-size: 1.2em; }
-        .bank-details { flex-basis: 60%; }
+        .subtotal p { margin: 2px 0; font-size: 0.95em; }
+        .total p { font-size: 1.2em; margin-top: 10px; }
+        .bank-details { flex-basis: 55%; }
         .footer { text-align: center; margin-top: 50px; font-size: 0.9em; }
         .qr-code-section { margin-top: 20px; } .qr-code { width: 150px; height: auto; }
         @media print { body { background-color: #fff; } .input-form, .action-buttons { display: none; } .main-container { display: block; } .invoice-container { box-shadow: none; border: none; margin: 0; width: 100%; min-height: auto; padding: 10mm; } .qr-code-section { display: none !important; } }
@@ -88,6 +86,8 @@
                 <label for="defaultQuantity">Days :</label>
                 <input type="number" id="defaultQuantity" min="1" value="1">
             </div>
+
+            <datalist id="item-suggestions"></datalist>
 
             <div id="items-container" style="display: none;"></div>
             
@@ -186,10 +186,47 @@
     </div>
 
     <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8o9tq7Ha8eA3vdR7tz9vbx_Rg68mQsEghXUXO6gCpv3S8r9UZUdM-c5kQqLzcusji/exec"; 
+        
+        // Default Master List (Backup if sheet is slow/empty)
+        let masterItems = ["Extra Bed", "Cab Service", "Food / Room Service", "Laundry", "Late Check-out"];
         let itemCounter = 0;
         
+        // Datalist render logic
+        function renderDatalist() {
+            const datalist = document.getElementById('item-suggestions');
+            datalist.innerHTML = '';
+            masterItems.forEach(item => {
+                let option = document.createElement('option');
+                option.value = item;
+                datalist.appendChild(option);
+            });
+        }
+
+        // Fetch saved items from Google Sheet on Page Load
+        function fetchMasterItems() {
+            renderDatalist(); // Pehle default dikha do
+            fetch(WEB_APP_URL + "?action=getItems")
+            .then(res => res.json())
+            .then(data => {
+                if(data && data.length > 0) {
+                    // Naye items array me daalo jo pehle se nahi hain
+                    data.forEach(d => {
+                        if(!masterItems.includes(d)) masterItems.push(d);
+                    });
+                    renderDatalist(); // Sheet wale items ke sath update kar do
+                }
+            })
+            .catch(err => console.log("Backend not ready for GET yet, using default items."));
+        }
+
+        window.onload = function() { 
+            document.getElementById('defaultRoomPrice').addEventListener('input', updateCalculatedTotal); 
+            document.getElementById('defaultQuantity').addEventListener('input', updateCalculatedTotal); 
+            fetchMasterItems(); // Page load hote hi list mangwao
+        }
+
         function addExtraItem() {
-            // Naya logic: Items add honge aur container dikhega
             const itemsContainer = document.getElementById('items-container');
             itemsContainer.style.display = 'block';
 
@@ -201,7 +238,7 @@
             newItemDiv.innerHTML = `
                 <span class="remove-item" onclick="removeItem(this)">x</span>
                 <label>Extra Item #${itemCounter}</label>
-                <input type="text" class="item-description" placeholder="Item Description">
+                <input type="text" class="item-description" list="item-suggestions" placeholder="Choose or type item...">
                 <div class="item-input-group">
                     <input type="number" class="item-price" min="0" placeholder="Price">
                     <input type="number" class="item-quantity" min="1" placeholder="Qty">
@@ -215,7 +252,6 @@
             element.closest('.item-input').remove(); 
             updateCalculatedTotal(); 
             
-            // Agar saare items hata diye, to container wapas chhupa do
             const items = document.querySelectorAll('.item-input');
             if(items.length === 0) {
                 document.getElementById('items-container').style.display = 'none';
@@ -223,12 +259,10 @@
         }
         
         function updateCalculatedTotal() {
-            // Room ka total (Base)
             const roomPrice = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; 
             const roomQuantity = parseInt(document.getElementById('defaultQuantity').value) || 0; 
             let total = roomPrice * roomQuantity;
             
-            // Extra items ka total jodo
             const items = document.querySelectorAll('.item-input');
             items.forEach(item => { 
                 const price = parseFloat(item.querySelector('.item-price').value) || 0; 
@@ -254,7 +288,7 @@
                 return def;
             };
             
-            // --- 1. ROOM ADD KARO ---
+            // --- 1. ROOM ROW ---
             const roomDesc = "Spacious Room (2X Beds)"; 
             const roomPrice = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; 
             const roomQuantity = parseInt(document.getElementById('defaultQuantity').value) || 0; 
@@ -272,7 +306,7 @@
                 <td style="font-size: ${getFontSize(rTotalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${rTotalStr}/-</td>`; 
             invoiceItemsTable.appendChild(roomRow);
 
-            // --- 2. EXTRA ITEMS ADD KARO ---
+            // --- 2. EXTRA ITEMS ROWS (WITH QTY IN DESCRIPTION) ---
             const items = document.querySelectorAll('.item-input');
             items.forEach(item => {
                 const description = item.querySelector('.item-description').value || 'Service/Item'; 
@@ -286,8 +320,10 @@
 
                 const newRow = document.createElement('tr'); 
                 newRow.innerHTML = `
-                    <td style="word-break: break-word; font-size: ${getFontSize(description, 25, '0.8em', 15, '0.9em', '1em')};">${description}</td>
-                    <td>${quantity}</td>
+                    <td style="word-break: break-word; font-size: ${getFontSize(description, 25, '0.8em', 15, '0.9em', '1em')};">
+                        ${description} <br><span style="font-size: 0.85em; color: #555;">(Qty: ${quantity})</span>
+                    </td>
+                    <td>-</td>
                     <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} /-</td>
                     <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr}/-</td>`; 
                 invoiceItemsTable.appendChild(newRow);
@@ -329,12 +365,6 @@
             }
         }
 
-        window.onload = function() { 
-            // Default load par ab bas listener add karo
-            document.getElementById('defaultRoomPrice').addEventListener('input', updateCalculatedTotal); 
-            document.getElementById('defaultQuantity').addEventListener('input', updateCalculatedTotal); 
-        }
-
         function saveAndSend() {
             const invoiceNo = document.getElementById('invoiceNumber').value;
             const issuedTo = document.getElementById('issuedTo').value;
@@ -360,13 +390,23 @@
             if (!roomPrice || roomPrice <= 0) { alert("Please enter a valid Price for Room!"); return; }
             if (!roomDays || roomDays <= 0) { alert("Please enter valid Days for Room!"); return; }
             
+            // NAYA LOGIC: Collect completely New Items typed by user
+            let newItemsToSave = [];
             const items = document.querySelectorAll('.item-input');
             for (let item of items) {
                 let p = item.querySelector('.item-price').value;
                 let q = item.querySelector('.item-quantity').value;
+                let desc = item.querySelector('.item-description').value.trim();
+
                 if (!p || p <= 0 || !q || q <= 0) {
                     alert("Please enter valid Price and Quantity for all extra items!");
                     return;
+                }
+                
+                // Agar naya naam hai jo master list me nahi hai, usko array me daalo
+                if(desc !== "" && !masterItems.includes(desc)) {
+                    newItemsToSave.push(desc);
+                    masterItems.push(desc); // Taki dubara na save ho
                 }
             }
 
@@ -384,14 +424,15 @@
                 link.href = canvas.toDataURL('image/png');
                 link.click();
 
-                // Backend ke liye 'Multiple' string bhej rahe hain agar extra items hain
-                const hasExtraItems = document.querySelectorAll('.item-input').length > 0;
+                const hasExtraItems = items.length > 0;
                 const finalDays = hasExtraItems ? "Multiple" : roomDays;
                 const finalPrice = hasExtraItems ? "Multiple" : roomPrice;
 
-                const billData = { invoiceNo, issuedTo, phone, email, days: finalDays, price: finalPrice, total };
-                
-                const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8o9tq7Ha8eA3vdR7tz9vbx_Rg68mQsEghXUXO6gCpv3S8r9UZUdM-c5kQqLzcusji/exec"; 
+                // Naye items ki array sheet ko bhej rahe hain "newDropdownItems" naam se
+                const billData = { 
+                    invoiceNo, issuedTo, phone, email, days: finalDays, price: finalPrice, total,
+                    newDropdownItems: newItemsToSave 
+                };
 
                 fetch(WEB_APP_URL, {
                     method: "POST",
