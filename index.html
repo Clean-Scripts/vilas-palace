@@ -6,13 +6,10 @@
     <title>Invoice Generator</title>
     
     <link rel="icon" type="image/png" href="https://nishu-coder.github.io/vilas-palace/Logo.png">
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        /* YOUR EXACT ORIGINAL CSS - UNTOUCHED */
         body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #f0f4f7, #e2e8f0); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
         .main-container { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1200px; }
         .input-form { background: rgba(255, 255, 255, 0.7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); padding: 20px; border-radius: 12px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); flex: 1 1 300px; margin-right: 20px; box-sizing: border-box; }
@@ -53,10 +50,11 @@
         .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; opacity: 0.1; z-index: 0; }
         .watermark img { width: 100%; height: auto; display: block; margin: auto; }
         .payment-section { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
-        .payment-summary { flex-basis: 35%; text-align: right; border-left: 1px solid #ddd; padding-left: 20px; }
+        .payment-summary { flex-basis: 40%; text-align: right; border-left: 1px solid #ddd; padding-left: 20px; }
         .subtotal, .total { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .total p { font-size: 1.2em; }
-        .bank-details { flex-basis: 60%; }
+        .subtotal p { margin: 2px 0; font-size: 0.95em; }
+        .total p { font-size: 1.2em; margin-top: 10px; }
+        .bank-details { flex-basis: 55%; }
         .footer { text-align: center; margin-top: 50px; font-size: 0.9em; }
         .qr-code-section { margin-top: 20px; } .qr-code { width: 150px; height: auto; }
         @media print { body { background-color: #fff; } .input-form, .action-buttons { display: none; } .main-container { display: block; } .invoice-container { box-shadow: none; border: none; margin: 0; width: 100%; min-height: auto; padding: 10mm; } .qr-code-section { display: none !important; } }
@@ -76,17 +74,17 @@
             <input type="text" id="issuedTo" value="Mr./ Mrs. ">
 
             <label for="customerPhone">WhatsApp No: </label>
-            <input type="text" id="customerPhone" placeholder="XXXXX XXXXX">
+            <input type="tel" id="customerPhone" placeholder="XXXXX XXXXX" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);">
 
             <label for="customerEmail">Email (Optional): </label>
             <input type="email" id="customerEmail" placeholder="customer@email.com">
 
             <div id="default-item-container">
                 <label for="defaultRoomPrice">Price (per day):</label>
-                <input type="number" id="defaultRoomPrice" placeholder="₹💰💰💰 /-">
+                <input type="number" id="defaultRoomPrice" min="0" placeholder="₹ 💰💰💰 /-">
                 
                 <label for="defaultQuantity">Days :</label>
-                <input type="number" id="defaultQuantity" value="1">
+                <input type="number" id="defaultQuantity" min="1" value="1">
             </div>
 
             <div id="items-container" style="display: none;"></div>
@@ -98,6 +96,9 @@
                     </button>
                 </div>
                 <button id="addItemBtn" onclick="toggleItemInput('toggle')">+</button>
+                <button class="print-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i>
+                </button>
             </div>
 
             <div class="total-display">
@@ -146,7 +147,7 @@
             <div class="watermark">
                 <img src="https://nishu-coder.github.io/vilas-palace/Logo.png" alt="Shree Vilas Palace" crossorigin="anonymous">
             </div>
-            <br><br><br><br><br><br><br><br>
+
             <div class="payment-section">
                 <div class="bank-details">
                     <p><strong>PAY @:</strong></p>
@@ -179,7 +180,7 @@
             </div>
 
             <div class="footer">
-                <p><strong><i>A 12/02 RAJGHAT, VARANASI, UTTAR PRADESH</strong><br> <strong> Contact: </strong> +91 88400 56365 <strong> | Pincode: 221001</strong></p>
+                <p><strong><i>A 12/02 RAJGHAT, VARANASI, UTTAR PRADESH</strong><br> <strong> Contact: +91 88400 56365 | Pincode: 221001</strong></p>
                 <p>Wishing you a joyfull Experience 😊</i></p>
                 <br><br><br>
                 <div class="qr-code-section">
@@ -191,6 +192,7 @@
 
     <script>
         let itemCounter = 0; let isDefaultMode = true;
+        
         function toggleItemInput(type) {
             const defaultContainer = document.getElementById('default-item-container'); const itemsContainer = document.getElementById('items-container'); const iconGroup = document.getElementById('icon-group'); const addItemBtn = document.getElementById('addItemBtn');
             if (type === 'toggle') {
@@ -201,6 +203,7 @@
             }
             updateCalculatedTotal();
         }
+        
         function addItem() {
             itemCounter++; const itemsContainer = document.getElementById('items-container'); const newItemDiv = document.createElement('div'); newItemDiv.className = 'item-input'; newItemDiv.dataset.itemId = itemCounter;
             newItemDiv.innerHTML = `
@@ -208,12 +211,13 @@
                 <label>Item #${itemCounter}</label>
                 <input type="text" class="item-description" placeholder="Item Description">
                 <div class="item-input-group">
-                    <input type="number" class="item-price" placeholder="Price">
-                    <input type="number" class="item-quantity" placeholder="Qty">
+                    <input type="number" class="item-price" min="0" placeholder="Price">
+                    <input type="number" class="item-quantity" min="1" placeholder="Qty">
                 </div>`;
             itemsContainer.appendChild(newItemDiv);
             document.querySelectorAll('.item-price, .item-quantity').forEach(input => { input.addEventListener('input', updateCalculatedTotal); });
         }
+        
         function removeItem(element) { element.closest('.item-input').remove(); updateCalculatedTotal(); }
         
         function updateCalculatedTotal() {
@@ -229,43 +233,83 @@
         }
         
         function generateInvoice() {
-            const invoiceNumber = document.getElementById('invoiceNumber').value || ''; const issuedDateInput = document.getElementById('issuedDate').value; const issuedTo = document.getElementById('issuedTo').value || '';
+            const invoiceNumber = document.getElementById('invoiceNumber').value || ''; 
+            const issuedDateInput = document.getElementById('issuedDate').value; 
+            const issuedTo = document.getElementById('issuedTo').value || '';
             const invoiceItemsTable = document.getElementById('invoice-items'); invoiceItemsTable.innerHTML = ''; let finalTotal = 0;
+
+            // UNIVERSAL AUTO SHRINK HELPER
+            const getFontSize = (str, limit1, size1, limit2, size2, def) => {
+                if(str.toString().length >= limit1) return size1;
+                if(str.toString().length >= limit2) return size2;
+                return def;
+            };
+            
             if (isDefaultMode) {
                 const description = "Spacious Room (2X Beds)"; const price = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; const quantity = parseInt(document.getElementById('defaultQuantity').value) || 0; finalTotal = price * quantity;
-                const newRow = document.createElement('tr'); newRow.innerHTML = `<td>${description}</td><td>${quantity}</td><td>₹ ${price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td><td>₹ ${finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td>`; invoiceItemsTable.appendChild(newRow);
+                const priceStr = price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                const totalStr = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                
+                const newRow = document.createElement('tr'); 
+                newRow.innerHTML = `
+                    <td style="word-break: break-word;">${description}</td>
+                    <td>${quantity}</td>
+                    <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} /-</td>
+                    <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr} /-</td>`; 
+                invoiceItemsTable.appendChild(newRow);
             } else {
                 const items = document.querySelectorAll('.item-input');
                 items.forEach(item => {
                     const description = item.querySelector('.item-description').value || 'Service/Item'; const price = parseFloat(item.querySelector('.item-price').value) || 0; const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; const itemTotal = price * quantity; finalTotal += itemTotal;
-                    const newRow = document.createElement('tr'); newRow.innerHTML = `<td>${description}</td><td>${quantity}</td><td>₹ ${price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td><td>₹ ${itemTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0})} /-</td>`; invoiceItemsTable.appendChild(newRow);
+                    
+                    const priceStr = price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                    const totalStr = itemTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+                    const newRow = document.createElement('tr'); 
+                    newRow.innerHTML = `
+                        <td style="word-break: break-word; font-size: ${getFontSize(description, 25, '0.8em', 15, '0.9em', '1em')};">${description}</td>
+                        <td>${quantity}</td>
+                        <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} /-</td>
+                        <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr} /-</td>`; 
+                    invoiceItemsTable.appendChild(newRow);
                 });
             }
-            document.getElementById('displayInvoiceNo').textContent = invoiceNumber; document.getElementById('displayIssuedTo').textContent = issuedTo;
+            
+            document.getElementById('displayInvoiceNo').textContent = invoiceNumber; 
+            
+            // ISSUED TO AUTO-SHRINK
+            const issuedToEl = document.getElementById('displayIssuedTo');
+            issuedToEl.textContent = issuedTo;
+            issuedToEl.style.fontSize = getFontSize(issuedTo, 25, '0.8em', 18, '0.9em', '1em');
+
             if (issuedDateInput) { const date = new Date(issuedDateInput); const options = { year: 'numeric', month: 'long', day: 'numeric' }; document.getElementById('displayIssuedDate').textContent = date.toLocaleDateString('en-US', options); } else { document.getElementById('displayIssuedDate').textContent = '--/--/----'; }
             
-            // TAX CALCULATION ADDED HERE
-            const gstRate = 0.12; // 12% GST
+            const gstRate = 0.12; 
             const baseAmount = finalTotal / (1 + gstRate);
             const totalTax = finalTotal - baseAmount;
             const cgst = totalTax / 2;
             const sgst = totalTax / 2;
 
-            document.getElementById('displaySubtotal').textContent = baseAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('displayCgst').textContent = cgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('displaySgst').textContent = sgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            document.getElementById('displayFinalTotal').textContent = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            const subStr = baseAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const cgstStr = cgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const sgstStr = sgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const finalStr = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+            // TAX & SUBTOTAL AUTO-SHRINK
+            document.getElementById('displaySubtotal').textContent = subStr;
+            document.getElementById('displaySubtotal').style.fontSize = getFontSize(subStr, 10, '0.85em', 7, '0.95em', '1em');
+
+            document.getElementById('displayCgst').textContent = cgstStr;
+            document.getElementById('displayCgst').style.fontSize = getFontSize(cgstStr, 10, '0.85em', 7, '0.95em', '1em');
+
+            document.getElementById('displaySgst').textContent = sgstStr;
+            document.getElementById('displaySgst').style.fontSize = getFontSize(sgstStr, 10, '0.85em', 7, '0.95em', '1em');
+
+            document.getElementById('displayFinalTotal').textContent = finalStr;
             
-            // --- NAYA AUTO-SHRINK HISSA ---
             const totalContainer = document.getElementById('totalAmountContainer');
             if (totalContainer) {
-                if (finalTotal.toString().length >= 7) { // 10,00,000 ya usse zyada
-                    totalContainer.style.fontSize = "0.8em";
-                } else if (finalTotal.toString().length >= 5) { // 10,000 ya usse zyada
-                    totalContainer.style.fontSize = "1em";
-                } else {
-                    totalContainer.style.fontSize = "1.2em"; // Default
-                }
+                totalContainer.style.fontSize = getFontSize(finalStr, 8, '0.85em', 6, '1em', '1.2em');
             }
         }
 
@@ -275,18 +319,42 @@
             const invoiceNo = document.getElementById('invoiceNumber').value;
             const issuedTo = document.getElementById('issuedTo').value;
             const phone = document.getElementById('customerPhone').value;
-            const email = document.getElementById('customerEmail').value;
+            const email = document.getElementById('customerEmail').value.trim();
             const total = updateCalculatedTotal();
             const statusMsg = document.getElementById('statusMsg');
+
+            // --- STRICT JS VALIDATIONS ---
+            if(!phone || phone.length !== 10) { 
+                alert("Please enter a valid 10-digit WhatsApp Number!"); 
+                return; 
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email !== "" && !emailRegex.test(email)) {
+                alert("Please enter a valid Email address!");
+                return;
+            }
 
             let days = "Multiple";
             let price = "Multiple";
             if (isDefaultMode) {
-                days = document.getElementById('defaultQuantity').value || 1;
-                price = document.getElementById('defaultRoomPrice').value || 0;
+                days = document.getElementById('defaultQuantity').value;
+                price = document.getElementById('defaultRoomPrice').value;
+                
+                if (!price || price <= 0) { alert("Please enter a valid Price (greater than 0)!"); return; }
+                if (!days || days <= 0) { alert("Please enter valid Days!"); return; }
+            } else {
+                const items = document.querySelectorAll('.item-input');
+                if (items.length === 0) { alert("Please add at least one item!"); return; }
+                for (let item of items) {
+                    let p = item.querySelector('.item-price').value;
+                    let q = item.querySelector('.item-quantity').value;
+                    if (!p || p <= 0 || !q || q <= 0) {
+                        alert("Please enter valid Price and Quantity for all items!");
+                        return;
+                    }
+                }
             }
-
-            if(!phone) { alert("Please enter a WhatsApp Number!"); return; }
 
             generateInvoice();
 
@@ -296,7 +364,7 @@
 
             const invoiceElement = document.getElementById('invoice-bill');
             
-            html2canvas(invoiceElement, { scale: 2, useCORS: true}).then(canvas => {                
+            html2canvas(invoiceElement, { scale: 2, useCORS: true }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `Invoice_${invoiceNo}_${issuedTo}.png`;
                 link.href = canvas.toDataURL('image/png');
@@ -317,7 +385,7 @@
                         statusMsg.textContent = "✅ Saved! Opening WhatsApp...";
                         
                         const message = `Hello ${issuedTo},%0A%0AThank you for staying at Shree Vilas Palace!%0AYour invoice #${invoiceNo} total is Rs. ${total}/-.%0A%0ARegards,%0AShree Vilas Palace`;
-                        const whatsappUrl = `https://wa.me/${phone}?text=${message}`;
+                        const whatsappUrl = `https://wa.me/91${phone}?text=${message}`;
                         setTimeout(() => { window.open(whatsappUrl, '_blank'); }, 1500);
                     } else {
                         statusMsg.style.color = "red";
@@ -330,7 +398,7 @@
                 });
             }).catch(error => {
                 statusMsg.style.color = "red";
-                statusMsg.textContent = "❌ Screenshot Error. Check image links.";
+                statusMsg.textContent = "❌ Screenshot Error.";
                 console.error(error);
             });
         }
