@@ -159,7 +159,7 @@
                 </div>
                 <div class="payment-summary">
                     <div class="subtotal">
-                        <p style="margin: 2px 0;"><strong>Subtotal</strong></p>
+                        <p style="margin: 2px 0;"><strong>Sub-Total </strong></p>
                         <p style="margin: 2px 0;">₹ <span id="displaySubtotal"></span></p>
                     </div>
                     <div class="subtotal">
@@ -255,8 +255,8 @@
                 newRow.innerHTML = `
                     <td style="word-break: break-word;">${description}</td>
                     <td>${quantity}</td>
-                    <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} /-</td>
-                    <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr} /-</td>`; 
+                    <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr}/-</td>
+                    <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr}/-</td>`; 
                 invoiceItemsTable.appendChild(newRow);
             } else {
                 const items = document.querySelectorAll('.item-input');
@@ -270,8 +270,8 @@
                     newRow.innerHTML = `
                         <td style="word-break: break-word; font-size: ${getFontSize(description, 25, '0.8em', 15, '0.9em', '1em')};">${description}</td>
                         <td>${quantity}</td>
-                        <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} /-</td>
-                        <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr} /-</td>`; 
+                        <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} </td>
+                        <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr}/-</td>`; 
                     invoiceItemsTable.appendChild(newRow);
                 });
             }
