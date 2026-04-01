@@ -286,8 +286,7 @@
             // 1. Capture the Invoice as an Image using html2canvas
             const invoiceElement = document.getElementById('invoice-bill');
             
-            html2canvas(invoiceElement, { scale: 2 }).then(canvas => {
-                // Download the image automatically
+            html2canvas(invoiceElement, { scale: 2, useCORS: true, allowTaint: true }).then(canvas => {                // Download the image automatically
                 const link = document.createElement('a');
                 link.download = `Invoice_${invoiceNo}_${issuedTo}.png`;
                 link.href = canvas.toDataURL('image/png');
