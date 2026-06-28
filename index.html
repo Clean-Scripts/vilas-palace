@@ -321,34 +321,22 @@
                 invoiceItemsTable.appendChild(newRow);
             });
             
-            document.getElementById('displayInvoiceNo').textContent = invoiceNumber; 
+document.getElementById('displayInvoiceNo').textContent = invoiceNumber; 
             
             const issuedToEl = document.getElementById('displayIssuedTo');
             issuedToEl.textContent = issuedTo;
             issuedToEl.style.fontSize = getFontSize(issuedTo, 25, '0.8em', 18, '0.9em', '1em');
 
-            if (issuedDateInput) { const date = new Date(issuedDateInput); const options = { year: 'numeric', month: 'long', day: 'numeric' }; document.getElementById('displayIssuedDate').textContent = date.toLocaleDateString('en-US', options); } else { document.getElementById('displayIssuedDate').textContent = '--/--/----'; }
+            if (issuedDateInput) { 
+                const date = new Date(issuedDateInput); 
+                const options = { year: 'numeric', month: 'long', day: 'numeric' }; 
+                document.getElementById('displayIssuedDate').textContent = date.toLocaleDateString('en-US', options); 
+            } else { 
+                document.getElementById('displayIssuedDate').textContent = '--/--/----'; 
+            }
             
-            const gstRate = 0.12; 
-            const baseAmount = finalTotal / (1 + gstRate);
-            const totalTax = finalTotal - baseAmount;
-            const cgst = totalTax / 2;
-            const sgst = totalTax / 2;
-
-            const subStr = baseAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            const cgstStr = cgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            const sgstStr = sgst.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            // Format and display the total directly without any GST splits
             const finalStr = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-
-            document.getElementById('displaySubtotal').textContent = subStr;
-            document.getElementById('displaySubtotal').style.fontSize = getFontSize(subStr, 10, '0.85em', 7, '0.95em', '1em');
-
-            document.getElementById('displayCgst').textContent = cgstStr;
-            document.getElementById('displayCgst').style.fontSize = getFontSize(cgstStr, 10, '0.85em', 7, '0.95em', '1em');
-
-            document.getElementById('displaySgst').textContent = sgstStr;
-            document.getElementById('displaySgst').style.fontSize = getFontSize(sgstStr, 10, '0.85em', 7, '0.95em', '1em');
-
             document.getElementById('displayFinalTotal').textContent = finalStr;
             
             const totalContainer = document.getElementById('totalAmountContainer');
