@@ -151,19 +151,14 @@
                     <strong>ACCOUNT NUMBER:</strong> xxxxxxxx2182 <br>
                     <strong>IFSC CODE:</strong> SBIN0030450</p>
                 </div>
-                <div class="payment-summary">
-                    <div class="subtotal">
-                        <p style="margin: 2px 0;"><strong>Sub-Total </strong></p>
-                        <p style="margin: 2px 0;">₹ <span id="displaySubtotal"></span></p>
-                    </div>
-                    <hr style="border-top: 1px dashed #ccc; margin: 8px 0;">
-                    <div class="total" style="display: flex; justify-content: space-between; align-items: center;">
-                        <p style="margin: 5px 0 0 0;"><strong>Total</strong></p>
-                        <p id="totalAmountContainer" style="white-space: nowrap; font-size: 1.2em; text-align: right; margin: 5px 0 0 0;">
-                            <strong>₹ <span id="displayFinalTotal"></span>/-</strong>
-                        </p>
-                    </div>
-                </div>
+<div class="payment-summary" style="border-left: 1px solid #ddd; padding-left: 20px;">
+    <div class="total" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+        <p style="margin: 0;"><strong>Total Amount</strong></p>
+        <p id="totalAmountContainer" style="white-space: nowrap; font-size: 1.2em; text-align: right; margin: 0;">
+            <strong>₹ <span id="displayFinalTotal"></span>/-</strong>
+        </p>
+    </div>
+</div>
             </div>
 
             <div class="footer">
@@ -177,271 +172,268 @@
         </div>
     </div>
 
-    <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8o9tq7Ha8eA3vdR7tz9vbx_Rg68mQsEghXUXO6gCpv3S8r9UZUdM-c5kQqLzcusji/exec"; 
-        
-        // Default Master List (Backup if sheet is slow/empty)
-        let masterItems = ["Extra Bed", "Cab Service", "Food / Room Service", "Laundry", "Late Check-out"];
-        let itemCounter = 0;
-        
-        // Datalist render logic
-        function renderDatalist() {
-            const datalist = document.getElementById('item-suggestions');
-            datalist.innerHTML = '';
-            masterItems.forEach(item => {
-                let option = document.createElement('option');
-                option.value = item;
-                datalist.appendChild(option);
-            });
-        }
+   <script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8o9tq7Ha8eA3vdR7tz9vbx_Rg68mQsEghXUXO6gCpv3S8r9UZUdM-c5kQqLzcusji/exec"; 
+    
+    // Default Master List (Backup if sheet is slow/empty)
+    let masterItems = ["Extra Bed", "Cab Service", "Food / Room Service", "Laundry", "Late Check-out"];
+    let itemCounter = 0;
+    
+    // Datalist render logic
+    function renderDatalist() {
+        const datalist = document.getElementById('item-suggestions');
+        datalist.innerHTML = '';
+        masterItems.forEach(item => {
+            let option = document.createElement('option');
+            option.value = item;
+            datalist.appendChild(option);
+        });
+    }
 
-        // Fetch saved items from Google Sheet on Page Load
-        function fetchMasterItems() {
-            renderDatalist(); // Pehle default dikha do
-            fetch(WEB_APP_URL + "?action=getItems")
-            .then(res => res.json())
-            .then(data => {
-                if(data && data.length > 0) {
-                    // Naye items array me daalo jo pehle se nahi hain
-                    data.forEach(d => {
-                        if(!masterItems.includes(d)) masterItems.push(d);
-                    });
-                    renderDatalist(); // Sheet wale items ke sath update kar do
-                }
-            })
-            .catch(err => console.log("Backend not ready for GET yet, using default items."));
-        }
-
-        window.onload = function() { 
-            document.getElementById('defaultRoomPrice').addEventListener('input', updateCalculatedTotal); 
-            document.getElementById('defaultQuantity').addEventListener('input', updateCalculatedTotal); 
-            fetchMasterItems(); // Page load hote hi list mangwao
-        }
-
-        function addExtraItem() {
-            const itemsContainer = document.getElementById('items-container');
-            itemsContainer.style.display = 'block';
-
-            itemCounter++; 
-            const newItemDiv = document.createElement('div'); 
-            newItemDiv.className = 'item-input'; 
-            newItemDiv.dataset.itemId = itemCounter;
-            
-            newItemDiv.innerHTML = `
-                <span class="remove-item" onclick="removeItem(this)">x</span>
-                <label>Extra Item #${itemCounter}</label>
-                <input type="text" class="item-description" list="item-suggestions" placeholder="Choose or type item...">
-                <div class="item-input-group">
-                    <input type="number" class="item-price" min="0" placeholder="Price">
-                    <input type="number" class="item-quantity" min="1" placeholder="Qty">
-                </div>`;
-                
-            itemsContainer.appendChild(newItemDiv);
-            document.querySelectorAll('.item-price, .item-quantity').forEach(input => { input.addEventListener('input', updateCalculatedTotal); });
-        }
-        
-        function removeItem(element) { 
-            element.closest('.item-input').remove(); 
-            updateCalculatedTotal(); 
-            
-            const items = document.querySelectorAll('.item-input');
-            if(items.length === 0) {
-                document.getElementById('items-container').style.display = 'none';
+    // Fetch saved items from Google Sheet on Page Load
+    function fetchMasterItems() {
+        renderDatalist(); // Pehle default dikha do
+        fetch(WEB_APP_URL + "?action=getItems")
+        .then(res => res.json())
+        .then(data => {
+            if(data && data.length > 0) {
+                // Naye items array me daalo jo pehle se nahi hain
+                data.forEach(d => {
+                    if(!masterItems.includes(d)) masterItems.push(d);
+                });
+                renderDatalist(); // Sheet wale items ke sath update kar do
             }
+        })
+        .catch(err => console.log("Backend not ready for GET yet, using default items."));
+    }
+
+    window.onload = function() { 
+        document.getElementById('defaultRoomPrice').addEventListener('input', updateCalculatedTotal); 
+        document.getElementById('defaultQuantity').addEventListener('input', updateCalculatedTotal); 
+        fetchMasterItems(); // Page load hote hi list mangwao
+    }
+
+    function addExtraItem() {
+        const itemsContainer = document.getElementById('items-container');
+        itemsContainer.style.display = 'block';
+
+        itemCounter++; 
+        const newItemDiv = document.createElement('div'); 
+        newItemDiv.className = 'item-input'; 
+        newItemDiv.dataset.itemId = itemCounter;
+        
+        newItemDiv.innerHTML = `
+            <span class="remove-item" onclick="removeItem(this)">x</span>
+            <label>Extra Item #${itemCounter}</label>
+            <input type="text" class="item-description" list="item-suggestions" placeholder="Choose or type item...">
+            <div class="item-input-group">
+                <input type="number" class="item-price" min="0" placeholder="Price">
+                <input type="number" class="item-quantity" min="1" placeholder="Qty">
+            </div>`;
+            
+        itemsContainer.appendChild(newItemDiv);
+        document.querySelectorAll('.item-price, .item-quantity').forEach(input => { input.addEventListener('input', updateCalculatedTotal); });
+    }
+    
+    function removeItem(element) { 
+        element.closest('.item-input').remove(); 
+        updateCalculatedTotal(); 
+        
+        const items = document.querySelectorAll('.item-input');
+        if(items.length === 0) {
+            document.getElementById('items-container').style.display = 'none';
+        }
+    }
+    
+    function updateCalculatedTotal() {
+        const roomPrice = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; 
+        const roomQuantity = parseInt(document.getElementById('defaultQuantity').value) || 0; 
+        let total = roomPrice * roomQuantity;
+        
+        const items = document.querySelectorAll('.item-input');
+        items.forEach(item => { 
+            const price = parseFloat(item.querySelector('.item-price').value) || 0; 
+            const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; 
+            total += price * quantity; 
+        });
+        
+        document.getElementById('calculatedTotal').textContent = total.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        return total; 
+    }
+    
+    function generateInvoice() {
+        const invoiceNumber = document.getElementById('invoiceNumber').value || ''; 
+        const issuedDateInput = document.getElementById('issuedDate').value; 
+        const issuedTo = document.getElementById('issuedTo').value || '';
+        const invoiceItemsTable = document.getElementById('invoice-items'); 
+        invoiceItemsTable.innerHTML = ''; 
+        let finalTotal = 0;
+
+        const getFontSize = (str, limit1, size1, limit2, size2, def) => {
+            if(str.toString().length >= limit1) return size1;
+            if(str.toString().length >= limit2) return size2;
+            return def;
+        };
+        
+        // --- 1. ROOM ROW ---
+        const roomDesc = "Spacious Room (2X Beds)"; 
+        const roomPrice = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; 
+        const roomQuantity = parseInt(document.getElementById('defaultQuantity').value) || 0; 
+        const roomTotal = roomPrice * roomQuantity;
+        finalTotal += roomTotal;
+
+        const rPriceStr = roomPrice.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        const rTotalStr = roomTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        
+        const roomRow = document.createElement('tr'); 
+        roomRow.innerHTML = `
+            <td style="word-break: break-word;">${roomDesc}</td>
+            <td>${roomQuantity}</td>
+            <td style="font-size: ${getFontSize(rPriceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${rPriceStr}/-</td>
+            <td style="font-size: ${getFontSize(rTotalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${rTotalStr}/-</td>`; 
+        invoiceItemsTable.appendChild(roomRow);
+
+        // --- 2. EXTRA ITEMS ROWS (WITH QTY IN DESCRIPTION) ---
+        const items = document.querySelectorAll('.item-input');
+        items.forEach(item => {
+            const description = item.querySelector('.item-description').value || 'Service/Item'; 
+            const price = parseFloat(item.querySelector('.item-price').value) || 0; 
+            const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; 
+            const itemTotal = price * quantity; 
+            finalTotal += itemTotal;
+            
+            const priceStr = price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            const totalStr = itemTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+
+            const newRow = document.createElement('tr'); 
+            newRow.innerHTML = `
+                <td style="word-break: break-word; font-size: ${getFontSize(description, 25, '0.8em', 15, '0.9em', '1em')};">
+                    ${description} <br><span style="font-size: 0.85em; color: #555;">(Qty: ${quantity})</span>
+                </td>
+                <td>-</td>
+                <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} /-</td>
+                <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr}/-</td>`; 
+            invoiceItemsTable.appendChild(newRow);
+        });
+        
+        document.getElementById('displayInvoiceNo').textContent = invoiceNumber; 
+        
+        const issuedToEl = document.getElementById('displayIssuedTo');
+        issuedToEl.textContent = issuedTo;
+        issuedToEl.style.fontSize = getFontSize(issuedTo, 25, '0.8em', 18, '0.9em', '1em');
+
+        if (issuedDateInput) { 
+            const date = new Date(issuedDateInput); 
+            const options = { year: 'numeric', month: 'long', day: 'numeric' }; 
+            document.getElementById('displayIssuedDate').textContent = date.toLocaleDateString('en-US', options); 
+        } else { 
+            document.getElementById('displayIssuedDate').textContent = '--/--/----'; 
         }
         
-        function updateCalculatedTotal() {
-            const roomPrice = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; 
-            const roomQuantity = parseInt(document.getElementById('defaultQuantity').value) || 0; 
-            let total = roomPrice * roomQuantity;
-            
-            const items = document.querySelectorAll('.item-input');
-            items.forEach(item => { 
-                const price = parseFloat(item.querySelector('.item-price').value) || 0; 
-                const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; 
-                total += price * quantity; 
-            });
-            
-            document.getElementById('calculatedTotal').textContent = total.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            return total; 
-        }
+        // Display the total directly without any Subtotal splits
+        const finalStr = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+        document.getElementById('displayFinalTotal').textContent = finalStr;
         
-        function generateInvoice() {
-            const invoiceNumber = document.getElementById('invoiceNumber').value || ''; 
-            const issuedDateInput = document.getElementById('issuedDate').value; 
-            const issuedTo = document.getElementById('issuedTo').value || '';
-            const invoiceItemsTable = document.getElementById('invoice-items'); 
-            invoiceItemsTable.innerHTML = ''; 
-            let finalTotal = 0;
+        const totalContainer = document.getElementById('totalAmountContainer');
+        if (totalContainer) {
+            totalContainer.style.fontSize = getFontSize(finalStr, 8, '0.85em', 6, '1em', '1.2em');
+        }
+    }
 
-            const getFontSize = (str, limit1, size1, limit2, size2, def) => {
-                if(str.toString().length >= limit1) return size1;
-                if(str.toString().length >= limit2) return size2;
-                return def;
-            };
-            
-            // --- 1. ROOM ROW ---
-            const roomDesc = "Spacious Room (2X Beds)"; 
-            const roomPrice = parseFloat(document.getElementById('defaultRoomPrice').value) || 0; 
-            const roomQuantity = parseInt(document.getElementById('defaultQuantity').value) || 0; 
-            const roomTotal = roomPrice * roomQuantity;
-            finalTotal += roomTotal;
+    function saveAndSend() {
+        const invoiceNo = document.getElementById('invoiceNumber').value;
+        const issuedTo = document.getElementById('issuedTo').value;
+        const phone = document.getElementById('customerPhone').value;
+        const email = document.getElementById('customerEmail').value.trim();
+        const total = updateCalculatedTotal();
+        const statusMsg = document.getElementById('statusMsg');
 
-            const rPriceStr = roomPrice.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            const rTotalStr = roomTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            
-            const roomRow = document.createElement('tr'); 
-            roomRow.innerHTML = `
-                <td style="word-break: break-word;">${roomDesc}</td>
-                <td>${roomQuantity}</td>
-                <td style="font-size: ${getFontSize(rPriceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${rPriceStr}/-</td>
-                <td style="font-size: ${getFontSize(rTotalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${rTotalStr}/-</td>`; 
-            invoiceItemsTable.appendChild(roomRow);
-
-            // --- 2. EXTRA ITEMS ROWS (WITH QTY IN DESCRIPTION) ---
-            const items = document.querySelectorAll('.item-input');
-            items.forEach(item => {
-                const description = item.querySelector('.item-description').value || 'Service/Item'; 
-                const price = parseFloat(item.querySelector('.item-price').value) || 0; 
-                const quantity = parseInt(item.querySelector('.item-quantity').value) || 0; 
-                const itemTotal = price * quantity; 
-                finalTotal += itemTotal;
-                
-                const priceStr = price.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-                const totalStr = itemTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-
-                const newRow = document.createElement('tr'); 
-                newRow.innerHTML = `
-                    <td style="word-break: break-word; font-size: ${getFontSize(description, 25, '0.8em', 15, '0.9em', '1em')};">
-                        ${description} <br><span style="font-size: 0.85em; color: #555;">(Qty: ${quantity})</span>
-                    </td>
-                    <td>-</td>
-                    <td style="font-size: ${getFontSize(priceStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${priceStr} /-</td>
-                    <td style="font-size: ${getFontSize(totalStr, 7, '0.8em', 5, '0.9em', '1em')};">₹ ${totalStr}/-</td>`; 
-                invoiceItemsTable.appendChild(newRow);
-            });
-            
-document.getElementById('displayInvoiceNo').textContent = invoiceNumber; 
-            
-            const issuedToEl = document.getElementById('displayIssuedTo');
-            issuedToEl.textContent = issuedTo;
-            issuedToEl.style.fontSize = getFontSize(issuedTo, 25, '0.8em', 18, '0.9em', '1em');
-
-            if (issuedDateInput) { 
-                const date = new Date(issuedDateInput); 
-                const options = { year: 'numeric', month: 'long', day: 'numeric' }; 
-                document.getElementById('displayIssuedDate').textContent = date.toLocaleDateString('en-US', options); 
-            } else { 
-                document.getElementById('displayIssuedDate').textContent = '--/--/----'; 
-            }
-            
-            // Format and display the total directly without any GST splits
-            const finalStr = finalTotal.toLocaleString('en-IN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
-            document.getElementById('displayFinalTotal').textContent = finalStr;
-            
-            const totalContainer = document.getElementById('totalAmountContainer');
-            if (totalContainer) {
-                totalContainer.style.fontSize = getFontSize(finalStr, 8, '0.85em', 6, '1em', '1.2em');
-            }
+        if(!phone || phone.length !== 10) { 
+            alert("Please enter a valid 10-digit WhatsApp Number!"); 
+            return; 
         }
 
-        function saveAndSend() {
-            const invoiceNo = document.getElementById('invoiceNumber').value;
-            const issuedTo = document.getElementById('issuedTo').value;
-            const phone = document.getElementById('customerPhone').value;
-            const email = document.getElementById('customerEmail').value.trim();
-            const total = updateCalculatedTotal();
-            const statusMsg = document.getElementById('statusMsg');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email !== "" && !emailRegex.test(email)) {
+            alert("Please enter a valid Email address!");
+            return;
+        }
 
-            if(!phone || phone.length !== 10) { 
-                alert("Please enter a valid 10-digit WhatsApp Number!"); 
-                return; 
-            }
+        const roomDays = document.getElementById('defaultQuantity').value;
+        const roomPrice = document.getElementById('defaultRoomPrice').value;
+        
+        if (!roomPrice || roomPrice <= 0) { alert("Please enter a valid Price for Room!"); return; }
+        if (!roomDays || roomDays <= 0) { alert("Please enter valid Days for Room!"); return; }
+        
+        let newItemsToSave = [];
+        const items = document.querySelectorAll('.item-input');
+        for (let item of items) {
+            let p = item.querySelector('.item-price').value;
+            let q = item.querySelector('.item-quantity').value;
+            let desc = item.querySelector('.item-description').value.trim();
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (email !== "" && !emailRegex.test(email)) {
-                alert("Please enter a valid Email address!");
+            if (!p || p <= 0 || !q || q <= 0) {
+                alert("Please enter valid Price and Quantity for all extra items!");
                 return;
             }
-
-            const roomDays = document.getElementById('defaultQuantity').value;
-            const roomPrice = document.getElementById('defaultRoomPrice').value;
             
-            if (!roomPrice || roomPrice <= 0) { alert("Please enter a valid Price for Room!"); return; }
-            if (!roomDays || roomDays <= 0) { alert("Please enter valid Days for Room!"); return; }
-            
-            // NAYA LOGIC: Collect completely New Items typed by user
-            let newItemsToSave = [];
-            const items = document.querySelectorAll('.item-input');
-            for (let item of items) {
-                let p = item.querySelector('.item-price').value;
-                let q = item.querySelector('.item-quantity').value;
-                let desc = item.querySelector('.item-description').value.trim();
-
-                if (!p || p <= 0 || !q || q <= 0) {
-                    alert("Please enter valid Price and Quantity for all extra items!");
-                    return;
-                }
-                
-                // Agar naya naam hai jo master list me nahi hai, usko array me daalo
-                if(desc !== "" && !masterItems.includes(desc)) {
-                    newItemsToSave.push(desc);
-                    masterItems.push(desc); // Taki dubara na save ho
-                }
+            if(desc !== "" && !masterItems.includes(desc)) {
+                newItemsToSave.push(desc);
+                masterItems.push(desc); 
             }
-
-            generateInvoice();
-
-            statusMsg.style.display = "block";
-            statusMsg.style.color = "#333";
-            statusMsg.textContent = "📸 Capturing bill & saving to Sheets...";
-
-            const invoiceElement = document.getElementById('invoice-bill');
-            
-            html2canvas(invoiceElement, { scale: 2, useCORS: true }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `Invoice_${invoiceNo}_${issuedTo}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-
-                const hasExtraItems = items.length > 0;
-                const finalDays = hasExtraItems ? "Multiple" : roomDays;
-                const finalPrice = hasExtraItems ? "Multiple" : roomPrice;
-
-                // Naye items ki array sheet ko bhej rahe hain "newDropdownItems" naam se
-                const billData = { 
-                    invoiceNo, issuedTo, phone, email, days: finalDays, price: finalPrice, total,
-                    newDropdownItems: newItemsToSave 
-                };
-
-                fetch(WEB_APP_URL, {
-                    method: "POST",
-                    body: JSON.stringify(billData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if(data.success) {
-                        statusMsg.style.color = "green";
-                        statusMsg.textContent = "✅ Saved! Opening WhatsApp...";
-                        
-                        const message = `Hello ${issuedTo},%0A%0AThank you for staying at Shree Vilas Palace!%0AYour invoice #${invoiceNo} total is Rs. ${total}/-.%0A%0ARegards,%0AShree Vilas Palace`;
-                        const whatsappUrl = `https://wa.me/91${phone}?text=${message}`;
-                        setTimeout(() => { window.open(whatsappUrl, '_blank'); }, 1500);
-                    } else {
-                        statusMsg.style.color = "red";
-                        statusMsg.textContent = "❌ Error saving to sheet.";
-                    }
-                })
-                .catch(error => {
-                    statusMsg.style.color = "red";
-                    statusMsg.textContent = "❌ Connection failed. Check App Script URL.";
-                });
-            }).catch(error => {
-                statusMsg.style.color = "red";
-                statusMsg.textContent = "❌ Screenshot Error.";
-                console.error(error);
-            });
         }
-    </script>
+
+        generateInvoice();
+
+        statusMsg.style.display = "block";
+        statusMsg.style.color = "#333";
+        statusMsg.textContent = "📸 Capturing bill & saving to Sheets...";
+
+        const invoiceElement = document.getElementById('invoice-bill');
+        
+        html2canvas(invoiceElement, { scale: 2, useCORS: true }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Invoice_${invoiceNo}_${issuedTo}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            const hasExtraItems = items.length > 0;
+            const finalDays = hasExtraItems ? "Multiple" : roomDays;
+            const finalPrice = hasExtraItems ? "Multiple" : roomPrice;
+
+            const billData = { 
+                invoiceNo, issuedTo, phone, email, days: finalDays, price: finalPrice, total,
+                newDropdownItems: newItemsToSave 
+            };
+
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(billData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if(data.success) {
+                    statusMsg.style.color = "green";
+                    statusMsg.textContent = "✅ Saved! Opening WhatsApp...";
+                    
+                    const message = `Hello ${issuedTo},%0A%0AThank you for staying at Shree Vilas Palace!%0AYour invoice #${invoiceNo} total is Rs. ${total}/-.%0A%0ARegards,%0AShree Vilas Palace`;
+                    const whatsappUrl = `https://wa.me/91${phone}?text=${message}`;
+                    setTimeout(() => { window.open(whatsappUrl, '_blank'); }, 1500);
+                } else {
+                    statusMsg.style.color = "red";
+                    statusMsg.textContent = "❌ Error saving to sheet.";
+                }
+            })
+            .catch(error => {
+                statusMsg.style.color = "red";
+                statusMsg.textContent = "❌ Connection failed. Check App Script URL.";
+            });
+        }).catch(error => {
+            statusMsg.style.color = "red";
+            statusMsg.textContent = "❌ Screenshot Error.";
+            console.error(error);
+        });
+    }
+</script>
 </body>
 </html>
